@@ -1,0 +1,596 @@
+<title>TextField S · Токены</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+
+<style>
+/* Страница-спецификация: колонка 880, разделы сверху вниз — демо, анатомия, размеры, цвета, состояния, поведение, код.
+   Цвета — токены SDDS (имена как в платформе), значения светлой и тёмной темы. */
+:root{
+  --text-primary:#15110FFC;
+  --text-secondary:#15110FA3;
+  --text-tertiary:#15110F66;
+  --text-negative:#D11D23;
+  --surface-accent:#0BA686;
+  --surface-solid-card:#FFFFFF;
+  --surface-transparent-secondary:#15110F14;
+  --surface-transparent-secondary-hover:#15110F1A;
+  --outline-primary:#DDD9D7;
+  --page:#F3F2F1;
+  --code-bg:#15110F0A;
+  --rule:#15110F14;
+  --font:Roboto,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Roboto Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --text-primary:#FFFFFFFC;--text-secondary:#F6F2F0A3;--text-tertiary:#F6F2F07A;--text-negative:#F57E83;
+    --surface-accent:#0BA686;--surface-solid-card:#232323;
+    --surface-transparent-secondary:#FFFFFF29;--surface-transparent-secondary-hover:#FFFFFF47;
+    --outline-primary:#3B3735;--page:#161514;--code-bg:#FFFFFF0D;--rule:#FFFFFF14;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --text-primary:#FFFFFFFC;--text-secondary:#F6F2F0A3;--text-tertiary:#F6F2F07A;--text-negative:#F57E83;
+  --surface-accent:#0BA686;--surface-solid-card:#232323;
+  --surface-transparent-secondary:#FFFFFF29;--surface-transparent-secondary-hover:#FFFFFF47;
+  --outline-primary:#3B3735;--page:#161514;--code-bg:#FFFFFF0D;--rule:#FFFFFF14;color-scheme:dark;
+}
+
+body{background:var(--page);color:var(--text-primary);font:400 14px/20px var(--font);letter-spacing:-0.28px;}
+.page{max-width:880px;margin:0 auto;padding-inline:20px;padding-block:40px 80px;display:grid;gap:48px;}
+.page > *{min-width:0;}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;}
+.eyebrow{font:500 12px/16px var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--text-secondary);}
+h1{margin:6px 0 8px;font:700 32px/38px var(--font);letter-spacing:-0.6px;text-wrap:balance;}
+.lead{margin:0;max-width:62ch;color:var(--text-secondary);font-size:15px;line-height:22px;letter-spacing:normal;}
+h2{margin:0 0 4px;font:700 20px/26px var(--font);letter-spacing:-0.3px;}
+h3{margin:20px 0 8px;font:500 15px/20px var(--font);}
+.sub{margin:0 0 16px;color:var(--text-secondary);max-width:68ch;}
+p{max-width:68ch;}
+code{font:400 12.5px/18px var(--mono);background:var(--code-bg);padding:1px 5px;border-radius:5px;letter-spacing:0;}
+
+.theme{display:inline-flex;padding:3px;border-radius:999px;background:var(--surface-transparent-secondary);}
+.theme button{border:0;background:transparent;color:var(--text-secondary);font:500 13px/18px var(--font);padding:5px 12px;border-radius:999px;cursor:pointer;}
+.theme button[aria-pressed="true"]{background:var(--surface-solid-card);color:var(--text-primary);box-shadow:0 1px 2px #0000001a;}
+.theme button:focus-visible{outline:2px solid var(--surface-accent);outline-offset:1px;}
+
+/* сцена — карточка, на которой живёт поле, как поповер в продукте */
+.stage{background:var(--surface-solid-card);border-radius:16px;padding:20px;box-shadow:0 0 0 1px var(--rule);}
+.hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:28px;align-items:start;}
+.hero .stage{padding:8px 8px 12px;}
+.row{display:flex;align-items:flex-start;gap:8px;margin-top:6px;}
+.confirm{width:32px;height:32px;flex:0 0 32px;margin-top:3px;border:0;border-radius:50%;display:grid;place-items:center;background:var(--surface-accent);color:#fff;cursor:pointer;}
+.confirm:disabled{opacity:.4;cursor:default;}
+.confirm svg{width:18px;height:18px;}
+.help{padding:6px 0 0;color:var(--text-secondary);font:400 12px/16px var(--font);letter-spacing:-0.24px;}
+.err{padding:6px 4px 0;color:var(--text-negative);font:400 12px/16px var(--font);letter-spacing:-0.24px;}
+.log{margin:0;padding:0;list-style:none;display:grid;gap:6px;color:var(--text-secondary);font-size:13px;}
+.log b{color:var(--text-primary);font-weight:500;}
+
+.states{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+.state{background:var(--surface-solid-card);border-radius:14px;padding:16px 12px 12px;box-shadow:0 0 0 1px var(--rule);display:grid;gap:10px;align-content:start;}
+.state__name{font:500 12px/16px var(--font);color:var(--text-secondary);letter-spacing:-0.24px;}
+.state__name b{color:var(--text-primary);font-weight:500;}
+
+.tbl{overflow-x:auto;border-radius:12px;box-shadow:0 0 0 1px var(--rule);background:var(--surface-solid-card);}
+table{width:100%;border-collapse:collapse;font-size:13px;line-height:18px;letter-spacing:-0.1px;}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-top:1px solid var(--rule);}
+thead th{border-top:0;font-weight:500;color:var(--text-secondary);font-size:12px;white-space:nowrap;}
+td:first-child{white-space:nowrap;font-weight:500;}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap;}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;box-shadow:inset 0 0 0 1px #8883;}
+
+/* анатомия: поле в масштабе 2× с выносками */
+.anat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,260px);gap:24px;align-items:center;}
+.anat svg{width:100%;height:auto;display:block;}
+.anat ol{margin:0;padding-left:20px;display:grid;gap:6px;}
+.anat-svg text{font-family:var(--font);}
+
+.code{position:relative;}
+.code pre{margin:0;max-height:420px;overflow:auto;padding:16px;border-radius:12px;background:var(--code-bg);box-shadow:inset 0 0 0 1px var(--rule);font:400 12px/18px var(--mono);letter-spacing:0;white-space:pre;tab-size:2;}
+.code__bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 0 8px;}
+.code__bar h3{margin:0;}
+.copy{border:0;border-radius:8px;padding:5px 10px;background:var(--surface-transparent-secondary);color:var(--text-primary);font:500 12px/16px var(--font);cursor:pointer;}
+.copy:hover{background:var(--surface-transparent-secondary-hover);}
+.copy:focus-visible{outline:2px solid var(--surface-accent);outline-offset:2px;}
+
+.note{padding:12px 14px;border-radius:12px;background:var(--surface-transparent-secondary);font-size:13px;line-height:19px;max-width:none;}
+
+@media (max-width:640px){
+  .hero,.anat{grid-template-columns:minmax(0,1fr);}
+  h1{font-size:26px;line-height:32px;}
+}
+</style>
+
+<!-- ═════════ Компонент: этот CSS — то, что забирает разработчик (блок «CSS» ниже показывает его же) ═════════ -->
+<style id="tkf-css">
+/* TextField S · Токены — компактное поле с плавающей подписью.
+   Значения внутри поля — капсулы (чипы); поле растёт по высоте, когда чипы
+   не помещаются в строку. Шрифты — Plasma typo, цвета — SDDS. */
+.tkf{
+  --tkf-bg:var(--surface-solid-card,#FFFFFF);          /* фон поля = фон подложки под ним */
+  --tkf-border:var(--outline-primary,#DDD9D7);
+  --tkf-accent:var(--surface-accent,#0BA686);
+  --tkf-text:var(--text-primary,#15110FFC);
+  --tkf-label:var(--text-secondary,#15110FA3);
+  --tkf-negative:var(--text-negative,#D11D23);
+  --tkf-chip-bg:var(--surface-transparent-secondary,#15110F14);
+  --tkf-chip-bg-hover:var(--surface-transparent-secondary-hover,#15110F1A);
+  --tkf-chip-meta:var(--text-secondary,#15110FA3);
+  --tkf-max-height:none;                                /* напр. 122px = 4 строки, дальше скролл */
+  position:relative;flex:1 1 auto;min-width:0;
+}
+
+.tkf__box{
+  box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;
+  min-height:38px;max-height:var(--tkf-max-height);overflow-y:auto;padding:8px 6px 6px;
+  border:1px solid var(--tkf-border);border-radius:10px;
+  background:var(--tkf-bg);cursor:text;
+  transition:border-color .2s ease,box-shadow .2s ease;
+}
+.tkf:hover .tkf__box{border-color:var(--tkf-accent);}
+.tkf__box:focus-within{border-color:var(--tkf-accent);box-shadow:0 0 0 1px var(--tkf-accent);}
+
+.tkf__chips{display:contents;}
+
+.tkf__input{
+  flex:1 1 64px;min-width:64px;height:22px;margin:0;padding:0 5px;
+  border:0;outline:0;background:transparent;color:var(--tkf-text);
+  font:var(--plasma-typo-body-m-font-weight,400) var(--plasma-typo-body-m-font-size,14px)/var(--plasma-typo-body-m-line-height,18px) Roboto,-apple-system,sans-serif;
+  letter-spacing:var(--plasma-typo-body-m-letter-spacing,normal);
+}
+
+/* Подпись: пустое поле — по центру строки (top 10); есть значение или фокус — на рамке */
+.tkf__label{
+  position:absolute;left:12px;top:10px;height:18px;margin:0;padding:0;
+  color:var(--tkf-label);pointer-events:none;transform-origin:left center;white-space:nowrap;
+  font:var(--plasma-typo-body-m-font-weight,400) var(--plasma-typo-body-m-font-size,14px)/var(--plasma-typo-body-m-line-height,18px) Roboto,-apple-system,sans-serif;
+  letter-spacing:var(--plasma-typo-body-m-letter-spacing,normal);
+  transition:top .2s ease,transform .2s ease,padding .2s ease,color .2s ease,font-weight 0s .1s;
+}
+/* подложка цвета поля прорезает рамку под поднятой подписью */
+.tkf__label::before{
+  content:"";position:absolute;left:0;right:0;top:50%;height:8px;
+  background:var(--tkf-bg);opacity:0;transform:translateY(-50%);transition:opacity .1s ease;
+}
+.tkf__label > span{position:relative;}
+
+.tkf:hover .tkf__label,
+.tkf:focus-within .tkf__label{color:var(--tkf-accent);}
+
+.tkf:focus-within .tkf__label,
+.tkf--filled .tkf__label{top:7px;padding:0 4px;font-weight:500;transform:translate(-4px,-16px) scale(.75);}
+
+.tkf:focus-within .tkf__label::before,
+.tkf--filled .tkf__label::before{opacity:1;}
+
+/* Ошибка: текст под полем красный, рамка остаётся нейтральной (как в «Заметках») */
+.tkf__error{padding:6px 4px 0;color:var(--tkf-negative);
+  font:var(--plasma-typo-text-xs-font-weight,400) var(--plasma-typo-text-xs-font-size,12px)/var(--plasma-typo-text-xs-line-height,16px) Roboto,-apple-system,sans-serif;
+  letter-spacing:var(--plasma-typo-text-xs-letter-spacing,-0.24px);}
+.tkf__error[hidden]{display:none;}
+
+/* Выключено */
+.tkf--disabled{opacity:.4;pointer-events:none;}
+
+/* ── Чип внутри поля: капсула 22 с крестиком ── */
+.tkf-chip{
+  display:inline-flex;align-items:center;gap:3px;height:22px;max-width:100%;padding:0 4px 0 8px;
+  border:0;border-radius:999px;background:var(--tkf-chip-bg);color:var(--tkf-text);cursor:pointer;white-space:nowrap;
+  font:var(--plasma-typo-text-xs-medium-font-weight,500) var(--plasma-typo-text-xs-font-size,12px)/var(--plasma-typo-text-xs-line-height,16px) Roboto,-apple-system,sans-serif;
+  letter-spacing:var(--plasma-typo-text-xs-letter-spacing,-0.24px);
+  transition:background-color .15s ease,transform .15s cubic-bezier(.4,0,.2,1);
+}
+.tkf-chip:hover{background:var(--tkf-chip-bg-hover);}
+.tkf-chip:active{transform:scale(.96);}
+.tkf-chip:focus-visible{outline:2px solid var(--tkf-accent);outline-offset:2px;}
+.tkf-chip__name{overflow:hidden;text-overflow:ellipsis;}
+.tkf-chip__hash{color:var(--tkf-chip-meta);font-weight:400;}
+.tkf-chip__x{display:grid;place-items:center;width:16px;height:16px;flex:0 0 16px;margin-left:2px;border-radius:50%;opacity:.7;}
+.tkf-chip__x svg{width:12px;height:12px;}
+.tkf-chip:hover .tkf-chip__x{opacity:1;background:color-mix(in srgb,currentColor 14%,transparent);}
+
+@media (prefers-reduced-motion:reduce){
+  .tkf__box,.tkf__label,.tkf__label::before,.tkf-chip{transition:none;}
+}
+</style>
+
+<main class="page">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Компонент · библиотека платформы</div>
+      <h1>TextField S · Токены</h1>
+      <p class="lead">Компактное поле ввода, внутри которого стоят значения-капсулы. Когда капсулы не помещаются в строку, поле переносит их и растёт по высоте. В продукте это поле «Добавить тег» в окошке тегов заметки.</p>
+    </div>
+    <div class="theme" role="group" aria-label="Тема">
+      <button type="button" data-theme-set="light" aria-pressed="false">Светлая</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">Тёмная</button>
+    </div>
+  </header>
+
+  <!-- ── Живое демо ── -->
+  <section>
+    <h2>Попробовать</h2>
+    <p class="sub">Наберите тег и нажмите Enter. Крестик или клик по капсуле убирает её, Backspace в пустом вводе убирает последнюю. Добавьте 5–6 тегов, чтобы увидеть перенос на вторую строку.</p>
+    <div class="hero">
+      <div class="stage">
+        <div class="row">
+          <div class="tkf" data-tkf id="demo-field">
+            <div class="tkf__box">
+              <span class="tkf__chips"></span>
+              <input class="tkf__input" id="demo-input" type="text" maxlength="32" autocomplete="off" spellcheck="false">
+            </div>
+            <label class="tkf__label" for="demo-input"><span>Добавить тег</span></label>
+          </div>
+          <button class="confirm" id="demo-confirm" type="button" aria-label="Готово" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button>
+        </div>
+        <div class="tkf__error" id="demo-error" hidden>Такой тег уже есть</div>
+        <div class="help">Выберите тег или создайте новый</div>
+      </div>
+      <ul class="log" aria-live="polite">
+        <li>Высота сейчас: <b id="demo-h">38 px</b></li>
+        <li>Строк капсул: <b id="demo-rows">1</b></li>
+        <li>Значения: <b id="demo-vals">ДРКБ, DS</b></li>
+        <li>Пример раскладки как в продукте: поле занимает ширину строки, справа круглая кнопка 32 «Готово», под полем подсказка textXS.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Анатомия ── -->
+  <section>
+    <h2>Анатомия</h2>
+    <p class="sub">Поле в масштабе 2×, две строки капсул.</p>
+    <div class="anat">
+      <svg class="anat-svg" viewBox="0 0 560 220" role="img" aria-label="Схема поля: рамка, подпись на рамке, капсулы, ввод, отступы">
+        <!-- рамка 244×66 → ×2 -->
+        <rect style="fill:var(--surface-solid-card);stroke:var(--outline-primary)" x="40" y="40" width="488" height="132" rx="20" stroke-width="2"/>
+        <!-- подпись на рамке -->
+        <rect style="fill:var(--surface-solid-card)" x="56" y="30" width="122" height="20"/>
+        <text style="fill:var(--text-secondary)" x="62" y="46" font-size="21" font-weight="500">Добавить тег</text>
+        <!-- строка 1: чипы 22 → 44, top pad 8 → 16 -->
+        <rect style="fill:var(--surface-transparent-secondary)" x="52" y="56" width="128" height="44" rx="22"/>
+        <text style="fill:var(--text-secondary)" x="68" y="85" font-size="22">#</text><text style="fill:var(--text-primary)" x="84" y="85" font-size="22" font-weight="500">ДРКБ</text>
+        <path style="stroke:var(--text-primary)" d="M156 70l16 16M172 70l-16 16" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+        <rect style="fill:var(--surface-transparent-secondary)" x="188" y="56" width="104" height="44" rx="22"/>
+        <text style="fill:var(--text-secondary)" x="204" y="85" font-size="22">#</text><text style="fill:var(--text-primary)" x="220" y="85" font-size="22" font-weight="500">DS</text>
+        <path style="stroke:var(--text-primary)" d="M262 70l16 16M278 70l-16 16" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+        <rect style="fill:var(--surface-transparent-secondary)" x="300" y="56" width="112" height="44" rx="22"/>
+        <text style="fill:var(--text-secondary)" x="316" y="85" font-size="22">#</text><text style="fill:var(--text-primary)" x="332" y="85" font-size="22" font-weight="500">iOS</text>
+        <path style="stroke:var(--text-primary)" d="M382 70l16 16M398 70l-16 16" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+        <!-- строка 2: чип + ввод -->
+        <rect style="fill:var(--surface-transparent-secondary)" x="52" y="112" width="128" height="44" rx="22"/>
+        <text style="fill:var(--text-secondary)" x="68" y="141" font-size="22">#</text><text style="fill:var(--text-primary)" x="84" y="141" font-size="22" font-weight="500">Идеи</text>
+        <path style="stroke:var(--text-primary)" d="M156 126l16 16M172 126l-16 16" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+        <rect style="stroke:var(--surface-accent)" x="188" y="112" width="328" height="44" rx="4" fill="none" stroke-dasharray="5 5"/>
+        <line style="stroke:var(--text-primary)" x1="202" y1="120" x2="202" y2="148" stroke-width="2"/>
+        <!-- выноски -->
+        <g style="fill:var(--surface-accent)" font-size="15" font-weight="700">
+          <circle cx="20" cy="40" r="12"/><text x="20" y="45" text-anchor="middle" fill="#fff">1</text>
+          <circle cx="200" cy="18" r="12"/><text x="200" y="23" text-anchor="middle" fill="#fff">2</text>
+          <circle cx="116" cy="196" r="12"/><text x="116" y="201" text-anchor="middle" fill="#fff">3</text>
+          <circle cx="156" cy="196" r="12"/><text x="156" y="201" text-anchor="middle" fill="#fff">4</text>
+          <circle cx="352" cy="196" r="12"/><text x="352" y="201" text-anchor="middle" fill="#fff">5</text>
+        </g>
+        <g style="stroke:var(--surface-accent)" stroke-width="1.5">
+          <line x1="116" y1="184" x2="116" y2="156"/><line x1="156" y1="184" x2="164" y2="142"/><line x1="352" y1="184" x2="352" y2="156"/><line x1="200" y1="30" x2="178" y2="38"/>
+        </g>
+        <!-- размеры справа -->
+        <g style="stroke:var(--text-tertiary);fill:var(--text-secondary)" stroke-width="1.5" font-size="14">
+          <line x1="540" y1="40" x2="540" y2="172"/><line x1="534" y1="40" x2="546" y2="40"/><line x1="534" y1="172" x2="546" y2="172"/>
+          <text x="548" y="110" stroke="none" writing-mode="tb" text-anchor="middle">66</text>
+        </g>
+      </svg>
+      <ol>
+        <li><b>Рамка</b> — 1 px, радиус 10, фон = фон подложки.</li>
+        <li><b>Подпись</b> — плавающая, на рамке прорезает её подложкой 8 px.</li>
+        <li><b>Капсула</b> — 22 px, «#» приглушён.</li>
+        <li><b>Крестик</b> — 16 px круг, значок 12.</li>
+        <li><b>Ввод</b> — занимает остаток строки, но не уже 64 px; иначе уходит на новую строку.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── Размеры ── -->
+  <section>
+    <h2>Размеры и типографика</h2>
+    <p class="sub">Высота считается от строк: <code>38 + 28 × (строк − 1)</code>. Одна строка — 38, две — 66, три — 94.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Элемент</th><th>Параметр</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td>Поле</td><td>мин. высота · отступы (верх / бока / низ)</td><td class="num">38 · 8 / 6 / 6</td></tr>
+        <tr><td></td><td>рамка · радиус</td><td class="num">1 px · 10</td></tr>
+        <tr><td></td><td>зазор между капсулами · между строками</td><td class="num">4 · 6</td></tr>
+        <tr><td></td><td>ширина</td><td>тянется по контейнеру (<code>flex:1 1 auto</code>), в окошке тегов 244</td></tr>
+        <tr><td></td><td>макс. высота</td><td>не ограничена; опция <code>--tkf-max-height</code> включает скролл внутри</td></tr>
+        <tr><td>Ввод</td><td>высота · отступы · мин. ширина</td><td class="num">22 · 0 5 · 64</td></tr>
+        <tr><td></td><td>шрифт</td><td><code>body-m</code> 14/18, 400</td></tr>
+        <tr><td></td><td>макс. длина значения</td><td class="num">32 символа</td></tr>
+        <tr><td>Подпись</td><td>в покое</td><td><code>body-m</code> 14/18, 400; left 12, top 10</td></tr>
+        <tr><td></td><td>поднята</td><td>top 7, <code>translate(-4px,-16px) scale(.75)</code> → 10.5 px, 500; отступы 0 4</td></tr>
+        <tr><td></td><td>подложка-прорезь</td><td class="num">высота 8, цвет фона поля</td></tr>
+        <tr><td>Капсула</td><td>высота · отступы · радиус</td><td class="num">22 · 0 4 0 8 · 999</td></tr>
+        <tr><td></td><td>шрифт</td><td><code>text-xs</code> 12/16, 500, −0.24; «#» — 400</td></tr>
+        <tr><td></td><td>крестик</td><td class="num">16 круг, значок 12, линия 2; отступ слева 2</td></tr>
+        <tr><td>Подсказка, ошибка</td><td>шрифт · отступ сверху</td><td><code>text-xs</code> 12/16, 400 · 6</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ── Цвета ── -->
+  <section>
+    <h2>Цвета</h2>
+    <p class="sub">Только токены SDDS. Если нужно сменить акцент или фон, переопределите переменные <code>--tkf-*</code> на корне компонента.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Роль</th><th>Токен</th><th>Светлая</th><th>Тёмная</th></tr></thead>
+      <tbody>
+        <tr><td>Фон поля, прорезь подписи</td><td><code>surface-solid-card</code>*</td><td class="num"><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</td><td class="num"><span class="sw" style="background:#232323"></span>#232323</td></tr>
+        <tr><td>Рамка в покое</td><td><code>outline-primary</code></td><td class="num"><span class="sw" style="background:#DDD9D7"></span>#DDD9D7</td><td class="num"><span class="sw" style="background:#3B3735"></span>#3B3735</td></tr>
+        <tr><td>Рамка hover/фокус, подпись hover/фокус</td><td><code>surface-accent</code></td><td class="num"><span class="sw" style="background:#0BA686"></span>#0BA686</td><td class="num"><span class="sw" style="background:#0BA686"></span>#0BA686</td></tr>
+        <tr><td>Текст ввода, имя капсулы</td><td><code>text-primary</code></td><td class="num"><span class="sw" style="background:#15110FFC"></span>#15110FFC</td><td class="num"><span class="sw" style="background:#FFFFFFFC"></span>#FFFFFFFC</td></tr>
+        <tr><td>Подпись в покое, «#», подсказка</td><td><code>text-secondary</code></td><td class="num"><span class="sw" style="background:#15110FA3"></span>#15110FA3</td><td class="num"><span class="sw" style="background:#F6F2F0A3"></span>#F6F2F0A3</td></tr>
+        <tr><td>Фон капсулы</td><td><code>surface-transparent-secondary</code></td><td class="num"><span class="sw" style="background:#15110F14"></span>#15110F14</td><td class="num"><span class="sw" style="background:#FFFFFF29"></span>#FFFFFF29</td></tr>
+        <tr><td>Фон капсулы hover</td><td><code>surface-transparent-secondary-hover</code></td><td class="num"><span class="sw" style="background:#15110F1A"></span>#15110F1A</td><td class="num"><span class="sw" style="background:#FFFFFF47"></span>#FFFFFF47</td></tr>
+        <tr><td>Крестик hover</td><td>currentColor 14 %</td><td colspan="2">подложка-круг из цвета текста капсулы</td></tr>
+        <tr><td>Текст ошибки</td><td><code>text-negative</code></td><td class="num"><span class="sw" style="background:#D11D23"></span>#D11D23</td><td class="num"><span class="sw" style="background:#F57E83"></span>#F57E83</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">* Фон поля должен совпадать с фоном под полем, иначе прорезь под подписью будет видна пятном. В прототипе поле лежит на поповере и берёт его фон. Рамка в прототипе — <code>text-primary</code> 14 % поверх фона; ближайший токен — <code>outline-primary</code>, разница на глаз не видна. Цветные теги (палитра тегов) в этот компонент не входят: капсула принимает свой цвет через переменные <code>--tkf-chip-*</code>.</p>
+  </section>
+
+  <!-- ── Состояния ── -->
+  <section>
+    <h2>Состояния</h2>
+    <p class="sub">Живые экземпляры компонента. Hover и фокус здесь включены классами-заглушками, в продукте их даёт браузер.</p>
+    <div class="states" id="states"></div>
+  </section>
+
+  <!-- ── Поведение ── -->
+  <section>
+    <h2>Поведение</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Действие</th><th>Результат</th></tr></thead>
+      <tbody>
+        <tr><td>Клик по пустому месту поля</td><td>Фокус в ввод. Клик по капсуле в фокус не переводит.</td></tr>
+        <tr><td>Enter</td><td>Текст без пробелов по краям становится капсулой, ввод очищается. Пустой текст игнорируется. Дубль — капсула не создаётся, под полем «Такой тег уже есть»; ошибка пропадает при следующем вводе.</td></tr>
+        <tr><td>Клик по капсуле / крестику</td><td>Капсула удаляется, фокус возвращается в ввод.</td></tr>
+        <tr><td>Backspace в пустом вводе</td><td>Удаляет последнюю капсулу.</td></tr>
+        <tr><td>Нет места в строке</td><td>Ввод (мин. 64) и капсулы переносятся, поле растёт на 28 за строку. С <code>--tkf-max-height</code> вместо роста — скролл внутри рамки.</td></tr>
+        <tr><td>Подпись</td><td>Поднимается на рамку, если есть фокус, капсулы или текст (класс <code>tkf--filled</code> ставит скрипт). Анимация 200 мс ease, вес меняется на 500 в середине.</td></tr>
+        <tr><td>Hover</td><td>Рамка и подпись — акцент. Фокус добавляет кольцо 1 px акцента, всего 2 px.</td></tr>
+        <tr><td>Событие</td><td><code>tkf:change</code> на корне, в <code>detail.values</code> — массив значений после изменения.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">В «Заметках» Enter отправляет всё окошко: тег создаётся, окошко закрывается, а капсулы добавляются кликом по списку «Все теги» под полем. В библиотечной версии Enter добавляет капсулу и оставляет фокус, это поведение по умолчанию. Если нужно как в «Заметках», передайте <code>onEnter</code> и верните <code>false</code>.</p>
+    <h3>Доступность</h3>
+    <ul>
+      <li>Подпись — настоящий <code>&lt;label for&gt;</code>, у ввода всегда есть имя.</li>
+      <li>Капсула — <code>&lt;button&gt;</code> с <code>aria-label="Убрать тег …"</code>, доступна с Tab, удаляется Enter/Space.</li>
+      <li>Ошибка связывается с вводом через <code>aria-describedby</code> и <code>aria-invalid</code>.</li>
+      <li>При <code>prefers-reduced-motion</code> переходы выключены.</li>
+    </ul>
+  </section>
+
+  <!-- ── Код ── -->
+  <section>
+    <h2>Код</h2>
+    <p class="sub">Три части: разметка, CSS и скрипт. Блоки ниже показывают ровно тот код, на котором работает эта страница.</p>
+    <div class="code">
+      <div class="code__bar"><h3>HTML</h3><button class="copy" type="button" data-copy="code-html">Скопировать</button></div>
+      <pre id="code-html"></pre>
+    </div>
+    <div class="code">
+      <div class="code__bar"><h3>CSS</h3><button class="copy" type="button" data-copy="code-css">Скопировать</button></div>
+      <pre id="code-css"></pre>
+    </div>
+    <div class="code">
+      <div class="code__bar"><h3>JS</h3><button class="copy" type="button" data-copy="code-js">Скопировать</button></div>
+      <pre id="code-js"></pre>
+    </div>
+  </section>
+</main>
+
+<template id="tkf-markup"><div class="tkf" data-tkf>
+  <div class="tkf__box">
+    <span class="tkf__chips"></span>
+    <input class="tkf__input" id="tag-input" type="text" maxlength="32"
+           autocomplete="off" spellcheck="false" aria-describedby="tag-error">
+  </div>
+  <label class="tkf__label" for="tag-input"><span>Добавить тег</span></label>
+</div>
+<div class="tkf__error" id="tag-error" hidden>Такой тег уже есть</div>
+
+<!-- капсулу рисует скрипт; так она выглядит в DOM -->
+<button class="tkf-chip" type="button" data-value="ДРКБ" aria-label="Убрать тег ДРКБ">
+  <span class="tkf-chip__hash" aria-hidden="true">#</span><span class="tkf-chip__name">ДРКБ</span>
+  <span class="tkf-chip__x" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></span>
+</button></template>
+
+<script id="tkf-js">
+/* TokenField: new TokenField(root, {values, prefix, error, onEnter})
+   root   — .tkf; error — элемент .tkf__error (необязательно)
+   values — начальные значения; prefix — знак перед именем ('#' для тегов, '' — без)
+   onEnter(text) — вернуть false, чтобы не создавать капсулу (своя обработка Enter)
+   API: .values, .add(v), .remove(v), .clear(); событие 'tkf:change' {values} */
+class TokenField {
+  constructor(root, {values = [], prefix = '#', error = null, onEnter = null} = {}){
+    this.root = root;
+    this.box = root.querySelector('.tkf__box');
+    this.chips = root.querySelector('.tkf__chips');
+    this.input = root.querySelector('.tkf__input');
+    this.error = error;
+    this.prefix = prefix;
+    this.onEnter = onEnter;
+    this.values = [];
+    values.forEach(v => this.add(v, {silent:true}));
+
+    // клик по пустому месту рамки — в ввод
+    this.box.addEventListener('pointerdown', e => {
+      if (e.target === this.box || e.target === this.chips){ e.preventDefault(); this.input.focus(); }
+    });
+    // клик по капсуле убирает её
+    this.chips.addEventListener('click', e => {
+      const chip = e.target.closest('.tkf-chip');
+      if (chip){ this.remove(chip.dataset.value); this.input.focus(); }
+    });
+    this.input.addEventListener('input', () => { this.setError(false); this.sync(); });
+    this.input.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        const text = this.input.value.trim();
+        if (!text) return;
+        if (this.onEnter && this.onEnter(text) === false) return;
+        if (this.has(text)){ this.setError(true); return; }
+        this.add(text);
+        this.input.value = '';
+        this.sync();
+      } else if (e.key === 'Backspace' && !this.input.value && this.values.length){
+        e.preventDefault();
+        this.remove(this.values.at(-1));
+      }
+    });
+    this.sync();
+  }
+
+  has(v){ return this.values.some(x => x.toLowerCase() === v.toLowerCase()); }
+
+  add(v, {silent = false} = {}){
+    v = String(v).trim();
+    if (!v || this.has(v)) return false;
+    this.values.push(v);
+    this.chips.append(this.chip(v));
+    this.sync();
+    if (!silent) this.emit();
+    return true;
+  }
+
+  remove(v){
+    const i = this.values.indexOf(v);
+    if (i < 0) return;
+    this.values.splice(i, 1);
+    this.chips.querySelector(`[data-value="${CSS.escape(v)}"]`)?.remove();
+    this.sync();
+    this.emit();
+  }
+
+  clear(){ this.values = []; this.chips.textContent = ''; this.input.value = ''; this.sync(); this.emit(); }
+
+  chip(v){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tkf-chip';
+    b.dataset.value = v;
+    b.setAttribute('aria-label', `Убрать тег ${v}`);
+    if (this.prefix){
+      const h = document.createElement('span');
+      h.className = 'tkf-chip__hash'; h.setAttribute('aria-hidden', 'true'); h.textContent = this.prefix;
+      b.append(h);
+    }
+    const n = document.createElement('span');
+    n.className = 'tkf-chip__name'; n.textContent = v;
+    const x = document.createElement('span');
+    x.className = 'tkf-chip__x'; x.setAttribute('aria-hidden', 'true');
+    x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+    b.append(n, x);
+    return b;
+  }
+
+  setError(on){
+    if (!this.error) return;
+    this.error.hidden = !on;
+    this.input.toggleAttribute('aria-invalid', on);
+  }
+
+  // подпись поднимается, когда есть капсулы или текст
+  sync(){ this.root.classList.toggle('tkf--filled', this.values.length > 0 || this.input.value !== ''); }
+
+  emit(){ this.root.dispatchEvent(new CustomEvent('tkf:change', {detail:{values:[...this.values]}})); }
+}
+</script>
+
+<script>
+(() => {
+  // тема страницы
+  const root = document.documentElement;
+  const btns = document.querySelectorAll('[data-theme-set]');
+  const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const paint = () => btns.forEach(b => b.setAttribute('aria-pressed', String((b.dataset.themeSet === 'dark') === isDark())));
+  btns.forEach(b => b.addEventListener('click', () => { root.dataset.theme = b.dataset.themeSet; paint(); }));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', paint);
+  paint();
+
+  // демо
+  const field = document.getElementById('demo-field');
+  const error = document.getElementById('demo-error');
+  const confirm = document.getElementById('demo-confirm');
+  const demo = new TokenField(field, {values:['ДРКБ','DS'], error});
+  const hOut = document.getElementById('demo-h'), rOut = document.getElementById('demo-rows'), vOut = document.getElementById('demo-vals');
+  const box = field.querySelector('.tkf__box');
+  const report = () => {
+    const h = box.offsetHeight;
+    hOut.textContent = h + ' px';
+    rOut.textContent = String(Math.max(1, Math.round((h - 38) / 28) + 1));
+    vOut.textContent = demo.values.join(', ') || '—';
+  };
+  let changed = false;
+  field.addEventListener('tkf:change', () => { changed = true; confirm.disabled = false; report(); });
+  demo.input.addEventListener('input', () => { confirm.disabled = !(changed || demo.input.value.trim()); });
+  confirm.addEventListener('click', () => { changed = false; confirm.disabled = true; });
+  new ResizeObserver(report).observe(box);
+  report();
+
+  // состояния
+  const STATES = [
+    {name:'Пустое',sub:'подпись по центру',values:[]},
+    {name:'Hover',sub:'рамка и подпись — акцент',values:[],cls:'is-hover'},
+    {name:'Фокус',sub:'кольцо 1 px, подпись на рамке',values:[],focus:true},
+    {name:'Одна строка',sub:'38 px',values:['ДРКБ','DS']},
+    {name:'Текст в вводе',sub:'подпись наверху без фокуса',values:['DS'],text:'Дизайн'},
+    {name:'Перенос',sub:'капсулы не влезли — вторая строка',values:['ДРКБ','DS','iOS','Идеи','Запуски']},
+    {name:'Много значений',sub:'поле растёт дальше, +28 за строку',values:['ДРКБ','DS','iOS','Идеи','Запуски','Работа','Дом','Путешествия']},
+    {name:'Ограничение высоты',sub:'--tkf-max-height: 66px, скролл',values:['ДРКБ','DS','iOS','Идеи','Запуски','Работа','Дом','Путешествия'],max:'66px'},
+    {name:'Длинное значение',sub:'капсула не шире поля, имя с многоточием, ввод — на новой строке',values:['Очень длинное название тега про запуск']},
+    {name:'Ошибка',sub:'дубль, текст text-negative',values:['ДРКБ'],text:'ДРКБ',error:true},
+    {name:'Выключено',sub:'прозрачность 40 %',values:['ДРКБ','DS'],disabled:true},
+  ];
+  const tpl = (i) => `<div class="tkf" data-tkf><div class="tkf__box"><span class="tkf__chips"></span><input class="tkf__input" id="st-${i}" type="text" maxlength="32" autocomplete="off" spellcheck="false" aria-describedby="st-err-${i}"></div><label class="tkf__label" for="st-${i}"><span>Добавить тег</span></label></div><div class="tkf__error" id="st-err-${i}" hidden>Такой тег уже есть</div>`;
+  const wrap = document.getElementById('states');
+  STATES.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'state';
+    card.innerHTML = `<div class="state__name"><b>${s.name}</b> · ${s.sub}</div>` + tpl(i);
+    wrap.append(card);
+    const el = card.querySelector('.tkf');
+    if (s.max) el.style.setProperty('--tkf-max-height', s.max);
+    const tf = new TokenField(el, {values:s.values, error:card.querySelector('.tkf__error')});
+    if (s.text){ tf.input.value = s.text; tf.sync(); }
+    if (s.error) tf.setError(true);
+    if (s.disabled){ el.classList.add('tkf--disabled'); tf.input.disabled = true; }
+    if (s.cls) el.classList.add(s.cls);
+    if (s.focus) el.classList.add('is-focus');
+  });
+
+  // код = то, что на странице
+  const html = document.getElementById('tkf-markup').innerHTML.trim();
+  const css = document.getElementById('tkf-css').textContent.trim();
+  const js = document.getElementById('tkf-js').textContent.trim();
+  document.getElementById('code-html').textContent = html;
+  document.getElementById('code-css').textContent = css;
+  document.getElementById('code-js').textContent = js;
+  document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+    const pre = document.getElementById(b.dataset.copy);
+    const done = () => { b.textContent = 'Скопировано'; setTimeout(() => { b.textContent = 'Скопировать'; }, 1500); };
+    const select = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Выделено — Cmd+C'; };
+    try { navigator.clipboard.writeText(pre.textContent).then(done, select); } catch { select(); }
+  }));
+})();
+</script>
+
+<style>
+/* заглушки состояний только для витрины */
+.tkf.is-hover .tkf__box{border-color:var(--tkf-accent);}
+.tkf.is-hover .tkf__label{color:var(--tkf-accent);}
+.tkf.is-focus .tkf__box{border-color:var(--tkf-accent);box-shadow:0 0 0 1px var(--tkf-accent);}
+.tkf.is-focus .tkf__label{color:var(--tkf-accent);top:7px;padding:0 4px;font-weight:500;transform:translate(-4px,-16px) scale(.75);}
+.tkf.is-focus .tkf__label::before{opacity:1;}
+</style>
