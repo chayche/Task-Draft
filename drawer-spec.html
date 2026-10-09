@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Задачи — дровер задачи</title>
+<style>
+  @page { size: A4; margin: 12mm 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; max-width: 920px; padding: 24px 16px 40px;
+    color: #15110f; background: #fff;
+    font: 13px/18px Roboto, -apple-system, sans-serif; letter-spacing: -0.2px;
+  }
+  h1 { margin: 0 0 4px; font: 600 22px/28px Roboto, sans-serif; letter-spacing: -0.4px; }
+  .sub { margin: 0 0 16px; color: #6b6662; }
+  h2 { margin: 28px 0 8px; font: 600 16px/22px Roboto, sans-serif; letter-spacing: -0.3px; break-after: avoid; }
+  h3 { margin: 0 0 8px; font: 600 13px/18px Roboto, sans-serif; }
+  p { margin: 0 0 8px; }
+  p.note, .note { color: #6b6662; }
+  ul { margin: 0 0 8px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 6px; }
+  th, td { text-align: left; vertical-align: top; padding: 5px 8px; border-bottom: 1px solid #e6e2de; }
+  th { color: #6b6662; font: 500 11px/14px Roboto, sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+  td:first-child { width: 28%; font-weight: 500; }
+  code { font: 500 11.5px/16px "SF Mono", ui-monospace, Menlo, monospace; background: #15110F0A; padding: 1px 4px; border-radius: 4px; word-break: break-word; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 8px 0; }
+  .card { padding: 12px 14px; border-radius: 12px; box-shadow: inset 0 0 0 1px #e6e2de; break-inside: avoid; }
+  .foot { margin-top: 28px; color: #8a8580; font-size: 11px; }
+
+  /* ── Макеты (схематично, в масштабе 1:1 по ключевым размерам) ── */
+  .stage { position: relative; height: 420px; border-radius: 16px; background: #F2F1EF; padding: 8px; display: grid; grid-template-columns: 180px 1fr; gap: 8px; overflow: hidden; margin: 8px 0 4px; }
+  .panel { position: relative; background: #fff; border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.05); overflow: hidden; }
+  .col { position: absolute; top: 48px; width: 150px; border-radius: 14px; background: #15110F08; padding: 8px; }
+  .mini { height: 54px; border-radius: 10px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06); margin-bottom: 8px; }
+  .drawer {
+    position: absolute; top: 8px; right: 8px; bottom: 8px; width: min(300px, calc(100% - 16px));
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 12px 40px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.06);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .d-head { height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-bottom: 1px solid #15110F0F; font: 500 11px/14px Roboto; }
+  .tog { width: 26px; height: 15px; border-radius: 8px; background: #15110F1F; }
+  .sp { flex: 1; }
+  .tb { width: 22px; height: 22px; border-radius: 7px; background: #15110F0A; }
+  .d-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .bar { height: 10px; border-radius: 5px; background: #15110F14; }
+
+  /* ── Состояния поля (точные стили, как в прототипе) ── */
+  .states { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 8px 0; }
+  .state b { display: block; margin-bottom: 6px; color: #6b6662; font: 500 10px/12px Roboto; text-transform: uppercase; letter-spacing: .04em; }
+  .f { position: relative; border-radius: 12px; color: #15110FFC; white-space: pre-wrap; }
+  .f-title { padding: 7px 44px 7px 12px; font: 600 17px/22px Roboto, sans-serif; }
+  .f-text { padding: 8px 44px 8px 12px; font: 400 16px/22px Roboto, sans-serif; }
+  .f.hover { background: #15110F0A; }
+  .f.edit-title { background: #15110F0A; }
+  .f.edit-text { background: #15110F08; }
+  .f .ck { position: absolute; right: 8px; bottom: 5px; width: 28px; height: 28px; padding: 4px; color: #15110F59; }
+  .f .ck.on { color: #09A784; }
+  .f .ck svg { width: 20px; height: 20px; display: block; }
+  .caret { display: inline-block; width: 1.5px; height: 18px; background: #09A784; vertical-align: -3px; margin-left: 1px; }
+  .ph { color: #15110FA3; }
+  .sel { background: #09A78433; }
+
+  .clamp-demo { width: 248px; padding: 10px 12px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px #e6e2de; }
+  .clamp-demo .t { font: 600 14px/20px Roboto; letter-spacing: -0.28px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .clamp-demo .s { color: #15110FA3; font: 400 14px/20px Roboto; margin-top: 2px; }
+
+  @media print { body { padding: 0; max-width: none; } .stage { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>Задачи — дровер задачи</h1>
+<p class="sub">Спецификация для внедрения в платформу Efir · по прототипу Chefir-Web (<code>tasks/</code>) · 09.10.2026</p>
+
+<p>Открытая задача показывается в <b>дровере</b>: закруглённой со всех углов панели, которая выезжает справа <b>поверх доски</b>. Доска под ним не сжимается. Внутри: шапка с действиями, название и описание (правятся по клику), свойства, вкладки «Комментарии / История / Файлы / Связи» и поле комментария.</p>
+
+<h2>1. Расположение и размеры</h2>
+
+<div class="stage" aria-label="Схема: дровер поверх доски на десктопе">
+  <div class="panel"></div>
+  <div class="panel">
+    <div class="col" style="left:14px"><div class="mini"></div><div class="mini"></div><div class="mini"></div></div>
+    <div class="col" style="left:174px"><div class="mini"></div><div class="mini"></div></div>
+    <div class="col" style="left:334px"><div class="mini"></div></div>
+    <div class="drawer">
+      <div class="d-head"><span class="tog"></span>Задача завершена<span class="sp"></span><span class="tb"></span><span class="tb"></span><span class="tb"></span></div>
+      <div class="d-body">
+        <div class="bar" style="width:70%;height:14px;background:#15110F2E"></div>
+        <div class="bar" style="width:90%"></div><div class="bar" style="width:60%"></div>
+        <div style="height:8px;border-bottom:1px solid #15110F14;margin-bottom:6px"></div>
+        <div class="bar" style="width:80%"></div><div class="bar" style="width:75%"></div><div class="bar" style="width:85%"></div><div class="bar" style="width:65%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="note">Схема. Слева панель досок, справа доска. Дровер прижат к правому краю доски с отступом 8 px со всех сторон.</p>
+
+<table>
+  <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+  <tbody>
+    <tr><td>Где лежит</td><td>В той же ячейке грида, что и доска (<code>grid-column: 2; grid-row: 1; justify-self: end</code>), над ней (<code>z-index: 6</code>). Не отдельная колонка: доска не сжимается.</td></tr>
+    <tr><td>Ширина</td><td><code>min(460px, 100% − 16px)</code>. 460 — максимум при любой ширине окна. Ручки изменения ширины нет.</td></tr>
+    <tr><td>Отступы</td><td>8 px со всех сторон от краёв доски (<code>margin: 8px</code>). Отступ справа сохраняется при любой ширине окна.</td></tr>
+    <tr><td>Скругление</td><td><code>calc(var(--panel-radius) − 4px)</code>: концентрично панели доски (панель 18–24 → дровер 14–20).</td></tr>
+    <tr><td>Тень</td><td><code>0 0 0 1px rgba(0,0,0,.04), 0 12px 40px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.06)</code></td></tr>
+    <tr><td>Фон</td><td><code>var(--panel)</code> (#FFFFFF; тёмная тема #212121)</td></tr>
+    <tr><td>Прокрутка доски</td><td>Пока дровер открыт, у колонок доски <code>padding-right: 476px</code> (460 + 16): последнюю колонку можно докрутить из-под дровера. В <b>аналитике</b> отступа нет, дровер просто лежит поверх контента.</td></tr>
+  </tbody>
+</table>
+
+<h3 style="margin-top:14px">Адаптив</h3>
+<table>
+  <thead><tr><th>Ширина</th><th>Поведение</th></tr></thead>
+  <tbody>
+    <tr><td>Рабочая область &gt; 800 px</td><td>Дровер поверх доски, как на схеме.</td></tr>
+    <tr><td>Рабочая область ≤ 800 px</td><td>Доске не хватает места. Дровер занимает колонки 1–2 (<code>grid-column: 1 / 3</code>), то есть ложится и поверх панели досок. Не <code>1 / -1</code>: иначе он заходит в пустую дорожку справа и пропадает отступ 8 px.</td></tr>
+    <tr><td>Телефон, окно ≤ 760 px (рейл → нижний таббар)</td><td>Экраны стопкой: панель досок → доска (со стрелкой «Назад») → дровер поверх доски. Ширина дровера <code>min(460px, 100% − 64px)</code>: слева всегда видна полоска доски 56 px. Полоска чуть затемнена (<code>rgba(0,0,0,.08)</code>), любой тап по ней закрывает дровер, даже по карточке под ним. 56 px — зона нажатия с запасом (Apple 44 pt, Google 48 dp).</td></tr>
+    <tr><td>Узкий дровер (≤ 380 px, container query по дроверу)</td><td>Колонка подписей свойств 108 px вместо 132, поля тела по 14 px вместо 18.</td></tr>
+  </tbody>
+</table>
+
+<h2>2. Появление и закрытие</h2>
+<table>
+  <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+  <tbody>
+    <tr><td>Появление</td><td><code>transform: translateX(calc(100% + 16px)) → none</code>, 360 мс, <code>cubic-bezier(.22, 1, .36, 1)</code>; <code>opacity 0 → 1</code>, 160 мс ease</td></tr>
+    <tr><td>Закрытие</td><td>Обратно вправо, 360 мс, та же кривая; opacity 200 мс; <code>visibility: hidden</code> — после окончания (задержка 360 мс)</td></tr>
+    <tr><td>Смена задачи в открытом дровере</td><td>Дровер не переезжает. Тело проявляется со сдвигом: <code>opacity 0 → 1, translateX(14px) → 0</code>, 260 мс, <code>cubic-bezier(.22, 1, .36, 1)</code>.</td></tr>
+    <tr><td>Reduced motion</td><td><code>prefers-reduced-motion: reduce</code> — без переходов</td></tr>
+  </tbody>
+</table>
+
+<div class="cards">
+  <div class="card"><h3>Открывают</h3>
+    <ul><li>Клик по карточке задачи (на доске, в списке, в смарт-списках)</li><li>«Открыть» в контекстном меню карточки</li><li>Ссылка на связанную задачу внутри дровера</li><li>«+» → «Создать задачу» (черновик, см. п. 5)</li></ul>
+  </div>
+  <div class="card"><h3>Закрывают</h3>
+    <ul><li>Крестик в шапке</li><li>Esc</li><li>Клик по доске мимо карточек и кнопок. Клик по другой карточке открывает её задачу</li><li>Телефон: тап по затемнённой полоске, «Назад» в шапке доски</li><li><b>Переход в «Аналитику»</b> закрывает открытую задачу. Если создать задачу из аналитики, дровер откроется поверх неё.</li></ul>
+  </div>
+</div>
+
+<h2>3. Шапка</h2>
+<table>
+  <thead><tr><th>Элемент</th><th>Значение</th></tr></thead>
+  <tbody>
+    <tr><td>Контейнер</td><td>Высота 56, поля <code>0 8px 0 14px</code>, gap 4, линия снизу 1 px <code>--tk-text-1</code> 6%</td></tr>
+    <tr><td>«Задача завершена»</td><td>Тогл (как в настройках) + подпись: Medium 14/18. Включение отмечает задачу выполненной, в историю «Задача завершена» / «Задача снова в работе»</td></tr>
+    <tr><td>Кнопки справа</td><td>Флажок · «⋯» (архив, удалить) · крестик. Кнопка 32×32, радиус 10, иконка 18, линия 1.5. Ховер — подложка <code>--chat-hover</code> вырастает из scale(.82). Флажок включён — красный <code>#FF3B30</code>, подложка 12%</td></tr>
+  </tbody>
+</table>
+
+<h2>4. Название и описание</h2>
+<p>Два поля, как тема и текст в карточке обещания. В покое это просто текст. При наведении появляется подложка, по клику поле правится на месте. Справа внизу линейная галочка: серая, зеленеет, когда есть что сохранить.</p>
+
+<div class="states">
+  <div class="state"><b>Покой</b>
+    <div class="f f-title">Добавить SSO через Okta</div>
+    <div class="f f-text" style="margin-top:2px">Нужен общий экран логина для TestFlight</div>
+  </div>
+  <div class="state"><b>Наведение</b>
+    <div class="f f-title hover">Добавить SSO через Okta</div>
+    <div class="f f-text" style="margin-top:2px">Нужен общий экран логина для TestFlight</div>
+  </div>
+  <div class="state"><b>Правка, без изменений</b>
+    <div class="f f-title edit-title">Добавить SSO через Okta<span class="caret"></span><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span></div>
+  </div>
+  <div class="state"><b>Правка, изменено</b>
+    <div class="f f-text edit-text">Нужен общий экран логина для TestFlight и прод-сборки<span class="caret"></span><span class="ck on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span></div>
+  </div>
+</div>
+
+<table>
+  <thead><tr><th>Параметр</th><th>Название</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td>Данные</td><td><code>task.title</code></td><td><code>task.subtitle</code></td></tr>
+    <tr><td>Шрифт</td><td>SemiBold 600 17/22, как название доски в шапке (<code>.svc-title</code>)</td><td>Regular 400 16/22</td></tr>
+    <tr><td>Поля внутри</td><td><code>7px 44px 7px 12px</code></td><td><code>8px 44px 8px 12px</code>, мин. высота строки 22</td></tr>
+    <tr><td>Края подсветки</td><td colspan="2">Выходят за колонку на 12 px с каждой стороны (<code>margin: 0 −12px</code>). Текст стоит на линии подписей свойств. Скругление 12</td></tr>
+    <tr><td>Наведение</td><td colspan="2"><code>--tk-text-1</code> 4% (≈ #15110F0A), переход 150 мс</td></tr>
+    <tr><td>Правка (фокус)</td><td>Та же подложка 4%</td><td>Подложка 3% (≈ #15110F08)</td></tr>
+    <tr><td>Подсказка, когда пусто</td><td>«Название задачи»</td><td>«Добавьте описание»; цвет <code>--tk-text-2</code></td></tr>
+    <tr><td>Галочка</td><td colspan="2">28×28, иконка 20, линия 2.2, справа 8 / снизу 5 (<b>внизу справа у обоих полей</b>). Видна только в правке. Серая <code>--tk-text-1</code> 35% → зелёная <code>--accent</code> (#09A784), когда текст изменён (у названия — изменён и не пустой). Ховер зелёной — подложка accent 10%. Нажатие не забирает фокус у поля (<code>pointerdown → preventDefault</code>)</td></tr>
+    <tr><td>Выполненная задача</td><td>Цвет <code>--tk-text-2</code>, зачёркнуто, толщина линии 2</td><td>Без изменений</td></tr>
+  </tbody>
+</table>
+
+<h3 style="margin-top:14px">Клавиатура и сохранение</h3>
+<table>
+  <thead><tr><th>Действие</th><th>Результат</th></tr></thead>
+  <tbody>
+    <tr><td>Enter</td><td>Сохранить и выйти из поля</td></tr>
+    <tr><td>Shift+Enter</td><td>Новая строка (переносы сохраняются, пустые строки по краям обрезаются)</td></tr>
+    <tr><td>Esc</td><td>Вернуть как было и выйти из поля. Дровер при этом не закрывается</td></tr>
+    <tr><td>Клик мимо поля / галочка</td><td>Сохранить</td></tr>
+    <tr><td>Пустое значение</td><td>Название: не сохраняется, возвращается прежнее. Описание: можно стереть совсем</td></tr>
+    <tr><td>История</td><td>«Название задачи изменено» / «Описание задачи изменено», только если значение действительно поменялось</td></tr>
+  </tbody>
+</table>
+
+<h2>5. Создание задачи</h2>
+<ul>
+  <li>«+» в панели досок → «Создать задачу». Черновик встаёт первым в самую левую колонку текущей доски (не на доске — первой доски). Пока не сохранён, он нигде не виден: ни в колонках, ни в счётчиках, ни в аналитике.</li>
+  <li>Дровер открывается с теми же полями, что у существующей задачи. В названии стоит «Задача», выделено целиком (печать сразу заменяет). Описание пустое, подсказка «Добавьте описание».</li>
+  <li>Задача создаётся, как только сохранили непустое название: Enter, галочка, уход из поля, клик мимо дровера, крестик. Описание сохраняется вместе с ней.</li>
+  <li>Название стёрли и закрыли дровер, или открыли другую задачу — черновик удаляется.</li>
+</ul>
+
+<h2>6. Свойства</h2>
+<table>
+  <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+  <tbody>
+    <tr><td>Сетка</td><td>Две колонки: подпись 132 px (узкий дровер 108) и значение. Gap 6 × 8. Сверху линия 1 px <code>--tk-text-1</code> 8%, отступ 16</td></tr>
+    <tr><td>Порядок</td><td>Создана · Автор · Доска · Колонка · Исполнители · Срок · Теги · Чек-лист</td></tr>
+    <tr><td>Подпись</td><td>Иконка 17 + текст 14/20, <code>--tk-text-2</code>, мин. высота 34</td></tr>
+    <tr><td>Нажимаемые значения</td><td>Высота 30, поля 0 8, радиус 8, 14/18. Ховер <code>--chat-hover</code>. Первая кнопка в строке сдвинута на −8, чтобы её текст стоял на линии остальных значений</td></tr>
+    <tr><td>Значения не переносятся</td><td>«Design team ⌄», дата с кнопками, «Добавить пункт · 2 из 4» умещаются в одну строку и на телефоне</td></tr>
+  </tbody>
+</table>
+
+<h2>7. Вкладки и комментарии</h2>
+<ul>
+  <li>Сегменты «Комментарии / История / Файлы / Связи» со счётчиками, отступ сверху 26. По умолчанию открыты «Комментарии».</li>
+  <li>Лента комментариев — та же, что в обсуждениях чатов: баблы, аватары, даты «Вчера / Сегодня», разделитель «Непрочитанные». Счётчик на вкладке — только непрочитанные.</li>
+  <li>Поле комментария прижато к низу дровера (слева и справа по 12, снизу 10), над ним справа капсула «Саммари».</li>
+</ul>
+
+<h2>8. Мини-карточка на доске</h2>
+<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+  <div class="clamp-demo"><div class="t">Очень длинное название задачи, которое точно не поместится в две строки на мини-карточке канбан-доски</div><div class="s">Описание задачи</div></div>
+  <p style="flex:1;min-width:220px">Название на карточке — <b>не больше двух строк</b>, дальше многоточие: <code>display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden</code>. Полное название видно в дровере. Открытая в дровере карточка подсвечена.</p>
+</div>
+
+<h2>9. Токены</h2>
+<table>
+  <thead><tr><th>Токен</th><th>Светлая</th><th>Тёмная</th></tr></thead>
+  <tbody>
+    <tr><td><code>--panel</code></td><td>#FFFFFF</td><td>#212121</td></tr>
+    <tr><td><code>--tk-text-1</code> (textPrimary)</td><td>#15110FFC</td><td>#FFFFFFFC</td></tr>
+    <tr><td><code>--tk-text-2</code> (textSecondary)</td><td>#15110FA3</td><td>#F6F2F0A3</td></tr>
+    <tr><td><code>--chat-hover</code></td><td>#15110F0A</td><td>rgba(255,255,255,.07)</td></tr>
+    <tr><td><code>--accent</code></td><td colspan="2">#09A784 (акцент темы)</td></tr>
+    <tr><td><code>--panel-radius</code></td><td colspan="2"><code>clamp(18px, 2.2vw, 24px)</code>; низкое окно (≤ 640 по высоте) — 18</td></tr>
+  </tbody>
+</table>
+
+<h2>10. Доступность</h2>
+<ul>
+  <li>Дровер — <code>role="dialog"</code>, <code>aria-label="Задача"</code>. Закрытый — <code>visibility: hidden</code>, недоступен с клавиатуры.</li>
+  <li>Поля названия и описания — <code>contenteditable="plaintext-only"</code>, <code>role="textbox"</code>, у описания <code>aria-multiline="true"</code>; у обоих <code>aria-label</code>.</li>
+  <li>Галочки — <code>tabindex="-1"</code>: сохранение с клавиатуры — Enter.</li>
+  <li>После закрытия фокус возвращается на карточку задачи.</li>
+</ul>
+
+<p class="foot">Источник — прототип Chefir-Web: <code>tasks/tasks.js</code> (openDrawer, closeDrawer, renderDrawer, commitEdit, syncMobile), <code>tasks/tasks.css</code> (.tk-taskpane, .tk-drawer, .tk-dtitle, .tk-dtext, .tk-dsave), правила раздела — <code>tasks/AGENTS.md</code>.</p>
+
+</body>
+</html>
