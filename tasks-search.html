@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Поиск в задачах</title>
+<style>
+  :root {
+    --bg: #f2f3f5;
+    --surface: #ffffff;
+    --column: #ececee;
+    --text: #1b1c1f;
+    --text-2: #5d6068;
+    --text-3: #9a9da5;
+    --line: #e3e4e8;
+    --accent: #2f9b6c;
+    --accent-soft: #e3f3eb;
+    --mark: #fff0b3;
+    --shadow: 0 1px 2px rgba(20,22,28,.06), 0 1px 1px rgba(20,22,28,.04);
+    --t-ios-bg:#e3eeff; --t-ios:#2d6bd6;
+    --t-be-bg:#e8e6fb; --t-be:#5246c4;
+    --t-qa-bg:#fdf0d8; --t-qa:#b7791f;
+    --t-urg-bg:#fde3e3; --t-urg:#c93434;
+    --t-dev-bg:#e3f0f8; --t-dev:#3b7ea8;
+    --t-rev-bg:#e1f3ea; --t-rev:#2f8a5f;
+    --t-des-bg:#fde4ef; --t-des:#c23a75;
+    --t-date-bg:#efeff1; --t-date:#5d6068;
+    --t-hot-bg:#fde3e0; --t-hot:#c94a2f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#121316; --surface:#1e2024; --column:#191b1e; --text:#eceef2; --text-2:#a7abb3; --text-3:#6f737b;
+      --line:#2c2f35; --accent:#4cc28c; --accent-soft:#1d3a2d; --mark:#5a4a12;
+      --shadow: 0 1px 2px rgba(0,0,0,.4);
+      --t-ios-bg:#1f2f4d; --t-ios:#8fb4f5; --t-be-bg:#2a2750; --t-be:#b0a8f5; --t-qa-bg:#3d311a; --t-qa:#e9b864;
+      --t-urg-bg:#43201f; --t-urg:#f08b8b; --t-dev-bg:#1d3342; --t-dev:#8cc2e3; --t-rev-bg:#1c3a2c; --t-rev:#7fd2a7;
+      --t-des-bg:#45202f; --t-des:#f19bc0; --t-date-bg:#2a2c31; --t-date:#a7abb3; --t-hot-bg:#45241e; --t-hot:#f29a85;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#121316; --surface:#1e2024; --column:#191b1e; --text:#eceef2; --text-2:#a7abb3; --text-3:#6f737b;
+    --line:#2c2f35; --accent:#4cc28c; --accent-soft:#1d3a2d; --mark:#5a4a12;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+    --t-ios-bg:#1f2f4d; --t-ios:#8fb4f5; --t-be-bg:#2a2750; --t-be:#b0a8f5; --t-qa-bg:#3d311a; --t-qa:#e9b864;
+    --t-urg-bg:#43201f; --t-urg:#f08b8b; --t-dev-bg:#1d3342; --t-dev:#8cc2e3; --t-rev-bg:#1c3a2c; --t-rev:#7fd2a7;
+    --t-des-bg:#45202f; --t-des:#f19bc0; --t-date-bg:#2a2c31; --t-date:#a7abb3; --t-hot-bg:#45241e; --t-hot:#f29a85;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+  }
+  .app {
+    max-width: 1180px; margin: 0 auto;
+    background: var(--surface);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* ── Шапка ───────────────────────── */
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    min-height: 64px;
+  }
+  .back { flex: none; }
+  .titles { flex: 1 1 auto; min-width: 0; }
+  .titles h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .titles .sub { font-size: 13px; color: var(--text-2); transition: color .2s; }
+  .titles .sub.filtered { color: var(--accent); font-weight: 600; }
+
+  .tools { display: flex; align-items: center; gap: 4px; flex: none; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center;
+    border: 0; background: transparent; color: var(--text-2); cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--column); }
+  .icon-btn.active { background: var(--accent-soft); color: var(--accent); }
+  .divider { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+  svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── Поиск: иконка → строка ───────── */
+  .search {
+    position: relative;
+    display: flex; align-items: center;
+    width: 36px; height: 36px;
+    border-radius: 18px;
+    background: transparent;
+    transition: width .28s cubic-bezier(.2,.8,.2,1), background-color .2s, box-shadow .2s;
+    overflow: hidden;
+    flex: none;
+  }
+  .search .s-icon {
+    flex: none; width: 36px; height: 36px; display: grid; place-items: center;
+    border: 0; background: transparent; color: var(--text-2); cursor: pointer; border-radius: 18px;
+  }
+  .search:not(.open) .s-icon:hover { background: var(--column); }
+  .search input {
+    flex: 1 1 auto; min-width: 0;
+    border: 0; outline: 0; background: transparent;
+    font: inherit; color: var(--text);
+    padding: 0 4px 0 0;
+    opacity: 0; transition: opacity .15s;
+  }
+  .search input::placeholder { color: var(--text-3); }
+  .search .count {
+    flex: none; font-size: 13px; color: var(--text-3); padding: 0 6px;
+    font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .15s;
+  }
+  .search .clear {
+    flex: none; width: 28px; height: 28px; margin-right: 4px;
+    border: 0; border-radius: 14px; cursor: pointer;
+    background: var(--column); color: var(--text-2);
+    display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity .15s;
+  }
+  .search .clear svg { width: 16px; height: 16px; }
+  .search.open {
+    width: 300px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+  }
+  .search.open:focus-within { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .search.open .s-icon { color: var(--accent); cursor: default; }
+  .search.open input, .search.open .count { opacity: 1; transition-delay: .1s; }
+  .search.open .clear { opacity: 1; pointer-events: auto; transition-delay: .1s; }
+  .search .count:empty { display: none; }
+
+  /* ── Доска ───────────────────────── */
+  .board {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 20px 16px 28px;
+    overflow-x: auto;
+    min-height: 560px;
+    scroll-behavior: smooth;
+  }
+  .col {
+    flex: 0 0 340px;
+    background: var(--column);
+    border-radius: 16px;
+    padding: 12px 8px 8px;
+  }
+  .col.hidden { display: none; }
+  .col-head { display: flex; align-items: center; padding: 2px 8px 10px; font-weight: 700; font-size: 15px; }
+  .col-head .n { color: var(--text-2); font-weight: 500; margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .col-head .sp { flex: 1; }
+  .col-head .icon-btn { width: 28px; height: 28px; }
+  .cards { display: flex; flex-direction: column; gap: 8px; }
+  .card {
+    background: var(--surface); border-radius: 12px; padding: 12px 14px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid transparent;
+    animation: pop .18s ease-out;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  .card.hidden { display: none; }
+  .card h3 { margin: 0 0 2px; font-size: 15px; font-weight: 700; display: flex; gap: 8px; }
+  .card h3 span { flex: 1; }
+  .card .flag { color: #e5483f; flex: none; }
+  .card .flag svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+  .card.done h3 { color: var(--text-2); }
+  .card .ok { color: var(--accent); flex: none; }
+  .card .ok svg { width: 18px; height: 18px; }
+  .card p { margin: 0 0 10px; color: var(--text); font-size: 14.5px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .av { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 10px; font-weight: 600; display: grid; place-items: center; }
+  .tag { font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+  mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 1px; }
+
+  .empty {
+    display: none; flex: 1; align-self: stretch;
+    flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    color: var(--text-2); text-align: center; padding: 60px 16px;
+  }
+  .empty.show { display: flex; }
+  .empty svg { width: 36px; height: 36px; color: var(--text-3); }
+  .empty b { color: var(--text); }
+  .empty button {
+    margin-top: 4px; border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer;
+    background: var(--accent-soft); color: var(--accent); font: inherit; font-weight: 600;
+  }
+
+  /* ── Подсказка снизу ─────────────── */
+  .notes { max-width: 1180px; margin: 16px auto 0; color: var(--text-2); font-size: 13.5px; padding: 0 4px; }
+  .notes summary { cursor: pointer; color: var(--text); font-weight: 600; }
+  .notes ul { margin: 8px 0 0; padding-left: 18px; }
+  .notes li { margin: 3px 0; }
+  kbd { font: 12px/1 ui-monospace, Menlo, monospace; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 5px; }
+
+  /* узкий экран: открытая строка перекрывает заголовок */
+  @media (max-width: 640px) {
+    body { padding: 0; }
+    .app { border-radius: 0; }
+    .header { position: relative; }
+    .search.open { position: absolute; left: 12px; right: 12px; width: auto; z-index: 2; }
+    .col { flex-basis: 85vw; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .search, .search * , .card { transition: none !important; animation: none !important; }
+    .board { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <button class="icon-btn back" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+    <div class="titles">
+      <h1>Design team</h1>
+      <div class="sub" id="sub">7 задач</div>
+    </div>
+
+    <div class="tools">
+      <button class="icon-btn active" aria-label="Доска"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="6" height="14" rx="1.5"/><rect x="14" y="5" width="6" height="8" rx="1.5"/></svg></button>
+      <button class="icon-btn" aria-label="Список"><svg viewBox="0 0 24 24"><path d="M9 7h11M9 12h11M9 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01"/></svg></button>
+      <span class="divider"></span>
+      <button class="icon-btn" aria-label="Фильтр"><svg viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></svg></button>
+      <button class="icon-btn" aria-label="Ещё"><svg viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/></svg></button>
+
+      <div class="search" id="search" role="search">
+        <button class="s-icon" id="sIcon" aria-label="Поиск по задачам" title="Поиск ( / или ⌘F )">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+        </button>
+        <input id="q" type="text" placeholder="Поиск" autocomplete="off" aria-label="Поиск по задачам" tabindex="-1">
+        <span class="count" id="count" aria-live="polite"></span>
+        <button class="clear" id="clear" aria-label="Закрыть поиск" tabindex="-1">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="board" id="board">
+    <div class="empty" id="empty">
+      <svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.5h6v2.5H9zM9 12h.01M9 16h.01M12 12h3M12 16h3"/></svg>
+      <div>Ничего не найдено по «<b id="emptyQ"></b>»</div>
+      <button id="reset">Сбросить поиск</button>
+    </div>
+  </main>
+</div>
+
+<details class="notes">
+  <summary>Как работает поиск</summary>
+  <ul>
+    <li>Клик по лупе, <kbd>/</kbd> или <kbd>⌘F</kbd> — иконка раскрывается в строку, фокус сразу в поле.</li>
+    <li>Фильтрация на лету: ищем по заголовку, описанию и тегам, без учёта регистра и «ё/е». Неподходящие карточки скрываются, пустые колонки тоже.</li>
+    <li>Счётчики колонок и шапка пересчитываются: «4 из 7 задач». В поле — просто число найденных, без шевронов.</li>
+    <li>Совпадения подсвечиваются в тексте и тегах. Если первый результат за краем экрана, доска докручивается к нему.</li>
+    <li>Пусто — «Ничего не найдено по „…“» и кнопка «Сбросить поиск».</li>
+    <li><kbd>Esc</kbd> или × — очистить и свернуть. Клик мимо при пустом поле тоже сворачивает; с текстом — фильтр остаётся.</li>
+    <li>Без выпадающего списка: результат сразу виден на доске.</li>
+  </ul>
+</details>
+
+<script>
+  const tagStyle = {
+    'iOS':'ios','Backend':'be','QA':'qa','Срочно':'urg','DevOps':'dev','Review':'rev','Дизайн':'des'
+  };
+  const people = { 'МС': '#9b7be0', 'ДО': '#6f9bd8' };
+
+  const columns = [
+    { title: 'Новые', tasks: [
+      { t:'Добавить SSO через Okta в клиент iOS', d:'Нужен общий экран логина для TestFlight и прод-сборки.', who:'МС', date:'16 окт', tags:['iOS','Backend'], flag:true },
+      { t:'Покрыть редактор снапшот-тестами', d:'Сравнить вёрстку карточки заметки на iPhone и iPad.', who:'ДО', tags:['QA','iOS'] },
+      { t:'Описать флоу офлайн-синхронизации заметок', d:'Конфликт правок должен решаться на стороне API.', date:'9 окт', hot:true, tags:['Backend','Review'] },
+    ]},
+    { title: 'В работе', tasks: [
+      { t:'Починить утечку памяти в текстовом редакторе', d:'Instruments показывает рост после вставки вложений.', who:'МС', date:'21 окт', tags:['iOS','Срочно'], flag:true },
+      { t:'Настроить CI для сборки TestFlight', d:'Подписать архив и выкладывать nightly на внутреннюю группу.', who:'ДО', date:'1 сент', hot:true, tags:['DevOps','Review'] },
+    ]},
+    { title: 'Завершено', tasks: [
+      { t:'Выкатить онбординг на новый экран заметок', d:'Проверили на iPad Air и iPhone 16, релиз в 1.4.', date:'14 окт', tags:['iOS','Дизайн'], done:true },
+      { t:'Обновить экран уведомлений', d:'Новые настройки push и тихих часов, согласовали с дизайном.', who:'МС', tags:['Дизайн'], done:true },
+    ]},
+  ];
+  const TOTAL = columns.reduce((s,c)=>s+c.tasks.length,0);
+
+  const $ = s => document.querySelector(s);
+  const board = $('#board'), search = $('#search'), q = $('#q'), count = $('#count'),
+        sub = $('#sub'), empty = $('#empty');
+
+  const norm = s => s.toLowerCase().replace(/ё/g,'е');
+  const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function hl(text, needle) {
+    if (!needle) return esc(text);
+    const n = norm(text); let out = '', i = 0, j;
+    while ((j = n.indexOf(needle, i)) !== -1) {
+      out += esc(text.slice(i, j)) + '<mark>' + esc(text.slice(j, j + needle.length)) + '</mark>';
+      i = j + needle.length;
+    }
+    return out + esc(text.slice(i));
+  }
+  const plural = n => { const a=n%10,b=n%100; return (a===1&&b!==11)?'задача':(a>=2&&a<=4&&(b<12||b>14))?'задачи':'задач'; };
+
+  // построение колонок
+  columns.forEach((c, ci) => {
+    const col = document.createElement('section');
+    col.className = 'col';
+    col.innerHTML = `<div class="col-head">${c.title}<span class="n"></span><span class="sp"></span>
+      <button class="icon-btn" aria-label="Меню колонки"><svg viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/></svg></button>
+      <button class="icon-btn" aria-label="Добавить"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      <div class="cards"></div>`;
+    c.el = col; c.nEl = col.querySelector('.n'); c.cardsEl = col.querySelector('.cards');
+    c.tasks.forEach(t => {
+      const card = document.createElement('article');
+      card.className = 'card' + (t.done ? ' done' : '');
+      t.el = card;
+      t.hay = norm([t.t, t.d, ...t.tags].join(' '));
+      c.cardsEl.appendChild(card);
+    });
+    board.insertBefore(col, empty);
+  });
+
+  function renderCard(t, needle) {
+    const right = t.done
+      ? '<i class="ok"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor" stroke="none"/><path d="M8.5 12.2l2.3 2.3 4.7-4.8" stroke="#fff"/></svg></i>'
+      : t.flag ? '<i class="flag"><svg viewBox="0 0 24 24"><path d="M6 3h1.6v18H6zM8 4h11l-2.6 4.5L19 13H8z"/></svg></i>' : '';
+    const av = t.who ? `<span class="av" style="background:${people[t.who]}">${t.who}</span>` : '';
+    const date = t.date ? `<span class="tag" style="background:var(--t-${t.hot?'hot':'date'}-bg);color:var(--t-${t.hot?'hot':'date'})">${t.hot?'🔥 ':''}${t.date}</span>` : '';
+    const tags = t.tags.map(g => `<span class="tag" style="background:var(--t-${tagStyle[g]}-bg);color:var(--t-${tagStyle[g]})">${hl(g, needle)}</span>`).join('');
+    t.el.innerHTML = `<h3><span>${hl(t.t, needle)}</span>${right}</h3><p>${hl(t.d, needle)}</p><div class="meta">${av}${date}${tags}</div>`;
+  }
+
+  function apply() {
+    const needle = norm(q.value.trim());
+    let found = 0, firstEl = null;
+    columns.forEach(c => {
+      let n = 0;
+      c.tasks.forEach(t => {
+        const hit = !needle || t.hay.includes(needle);
+        t.el.classList.toggle('hidden', !hit);
+        if (hit) { n++; renderCard(t, needle); if (!firstEl) firstEl = t.el; }
+      });
+      c.nEl.textContent = n;
+      c.el.classList.toggle('hidden', !!needle && n === 0);
+      found += n;
+    });
+
+    count.textContent = needle ? String(found) : '';
+    sub.textContent = needle ? `${found} из ${TOTAL} ${plural(TOTAL)}` : `${TOTAL} ${plural(TOTAL)}`;
+    sub.classList.toggle('filtered', !!needle);
+    empty.classList.toggle('show', !!needle && found === 0);
+    $('#emptyQ').textContent = q.value.trim();
+
+    // докрутка к первому результату, если он за краем
+    if (needle && firstEl) {
+      const b = board.getBoundingClientRect(), r = firstEl.getBoundingClientRect();
+      if (r.left < b.left || r.right > b.right) board.scrollLeft += r.left - b.left - 16;
+    } else if (!needle) board.scrollLeft = 0;
+  }
+
+  function open() {
+    if (search.classList.contains('open')) { q.focus(); return; }
+    search.classList.add('open');
+    q.tabIndex = 0; $('#clear').tabIndex = 0;
+    setTimeout(() => q.focus(), 60);
+  }
+  function close() {
+    q.value = ''; apply();
+    search.classList.remove('open');
+    q.tabIndex = -1; $('#clear').tabIndex = -1;
+    q.blur(); $('#sIcon').focus({ preventScroll: true });
+  }
+
+  $('#sIcon').addEventListener('click', open);
+  $('#clear').addEventListener('click', close);
+  $('#reset').addEventListener('click', () => { q.value = ''; apply(); q.focus(); });
+  q.addEventListener('input', apply);
+  q.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
+
+  // клик мимо: пустое поле сворачивается, с текстом — остаётся
+  document.addEventListener('mousedown', e => {
+    if (search.classList.contains('open') && !search.contains(e.target) && !q.value.trim()) close();
+  });
+
+  // горячие клавиши
+  document.addEventListener('keydown', e => {
+    const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); open(); }
+    else if (e.key === '/' && !typing) { e.preventDefault(); open(); }
+  });
+
+  apply();
+</script>
+</body>
+</html>
